@@ -1,0 +1,254 @@
+{% extends "app/layout.html" %}
+
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+{% block content %}
+
+{% leaflet_map "main" callback="window.main_map_init" %}
+<style>
+
+  body {
+      padding: 0;
+      margin: 0;
+  }
+  html, body, #map {
+      height: 100%;
+      width: 100%;
+  }
+
+  #legendTitle {
+    text-align: center;
+    margin-bottom: 15px;
+    color: whitesmoke;
+    font-weight: bold;
+  }
+  .legend {
+    float: right;
+    background: rgba(0,0,0,1);
+    color: black;
+    display: inline-block;
+    padding: 6px 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+  }
+  .symbolsContainer {
+    float: left;
+    margin-left: 50px;
+  }
+  .legendCircle {
+    border-radius: 50%;
+    border: 1px solid #537898;
+    background: rgba(0,128,128,0.5);
+    display: inline-block;
+  }
+  .legendValue {
+    position: absolute;
+    right: 12px;
+    color: whitesmoke;
+    font-size: 10pt;
+    text-align:center;
+    font-weight: bold;
+  }
+  .info {
+    width:30vw;
+    height:48vh;
+    padding: 6px 10px;
+    font: 14px Arial, Helvetica, sans-serif;
+    background: rgba(0,0,0,0.5);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: whitesmoke;
+  }
+  .info h6 {
+    margin: 0 0 5px;
+    color: #777;
+    text-align: center;
+    color: whitesmoke;
+    font-weight: bold;
+  }
+  .info #horBarChart {
+    width: 100% !important;
+    max-width: 800px;
+  }
+  .leaflet-control-layers {
+    float:right;
+    top: 500px;
+    right:0;
+    position: absolute;
+    background: rdba(0,0,0,0.85);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: whitesmoke;
+  }
+
+</style>
+
+<script type="text/javascript">
+
+
+  function main_map_init(map, options) {
+
+    var winddataset = new L.GeoJSON.AJAX("{% url 'wind_dataset' %}",
+    {
+      style : function (feature) {
+        return {
+          fillColor: feature.properties.colorcode,
+          weight: 0,
+          opacity: 0.1,
+          color: feature.properties.colorcode,
+          fillOpacity: 0.1
+      }}
+    })
+
+    const windchk=document.getElementById('wind-chk');
+
+    windchk.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        map.addLayer(winddataset);
+      } else {
+        map.removeLayer(winddataset);
+      }
+      })
+
+    function polystyle(feature) {
+      return {
+        fillColor: getColor(feature.properties.NPV),
+        weight: 2,
+        opacity: 1,
+        color: getColor(feature.properties.NPV),  //Outline color
+        fillOpacity: 0.7
+      };
+    }
+
+
+    var dataset = new L.GeoJSON.AJAX("{% url 'NPV_dataset' %}",
+    {
+      style : function (feature) {
+        return {
+          fillColor: getColor(feature.properties.NPV),
+          weight: 2,
+          opacity: 0.5,
+          color: getColor(feature.properties.NPV),  //Outline color
+          fillOpacity: 0.5
+        }}
+    }).addTo(map);
+
+    function getColor(x) {
+      return ((x<0) ? '#F2522F' : '#168011');
+    };
+
+
+    var linesdataset = new L.GeoJSON.AJAX("{% url 'lines_dataset' %}",
+    {
+      style: {
+        color: '#168011',
+        weight: 1,
+        opacity: 1
+      }
+    })
+
+    const lineschk=document.getElementById('lines-chk');
+
+    lineschk.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        map.addLayer(linesdataset);
+      } else {
+        map.removeLayer(linesdataset);
+      }
+      })
+
+
+
+    var zonedataset = new L.GeoJSON.AJAX("{% url 'zone_dataset' %}",
+    {
+      style : function (feature) {
+        return {
+          fillColor: getPriceColor(feature.properties.price),
+          weight: 0,
+          opacity: 0.1,
+          color: getPriceColor(feature.properties.price),
+          fillOpacity: 0.05
+
+        }}
+    })
+    function getPriceColor(x) {
+      return ((x>=45) ? '#001f60' : (x>=40) ? '#1d3b74' : (x>=35) ? '#395587' : (x>=30) ? '#59729d' : (x>=25) ? '#768cb1' : (x>=20) ? '#94a8c5' : (x>=15) ? '#b4c4da' : '#ddebf7');
+    };
+
+    const zoneschk=document.getElementById('zones-chk');
+
+    zoneschk.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        map.addLayer(zonedataset);
+      } else {
+        map.removeLayer(zonedataset);
+      }
+      })
+
+
+
+    var button = new L.Control.Button('Menu', {
+      toggleButton: 'active',
+      position: 'topleft',
+
+    });
+    button.addTo(map);
+    button.on('click', function() {
+      sidebar.toggle();
+    });
+
+    var sidebar = L.control.sidebar('sidebar', {
+      closeButton: true,
+      position: 'left'
+
+
+    }).addTo(map);
+
+    createLegend();
+
+    function createLegend() {
+      var legend = L.control({position: 'bottomright'});
+      legend.onAdd = function(map){
+        var legendContainer = L.DomUtil.create('div', 'legend');
+        var symbolsContainer = L.DomUtil.create('div', 'symbolsContainer');
+        var classes = [4, 10, 20];
+        var legendCircle;
+        var lastRadius = 0;
+        var margin;
+
+        $(legendContainer).append("<h6 id = 'legendTitle'>Average in Kiloliters (KL)</h6>");
+        for (var i = 0; i <= classes.length-1; i++) {
+          legendCircle= L.DomUtil.create("div", "legendCircle");
+          currentRadius=calcPropRadius(classes[i]);
+          margin = -currentRadius -lastRadius - 2;
+          $(legendCircle).attr("style", "width: " + currentRadius*2+ "px; height: "+ currentRadius*2 + "px; margin-left: " + margin + "px");
+          if (classes[i]==20) {
+            $(legendCircle).append("<span class = 'legendValue'>" + '11 - '+ classes[i] + '+' + "</span>");
+          } else if (classes[i]==10) {
+            $(legendCircle).append("<span class = 'legendValue'>" + '5 - '+ classes[i] + '+' + "</span>");
+          } else if (classes[i]==4) {
+            $(legendCircle).append("<span class = 'legendValue'>" + '0 - '+ classes[i] + '+' + "</span>");
+          }
+          $(symbolsContainer).append(legendCircle);
+          lastRadius=currentRadius;
+
+        }
+
+        $(legendContainer).append(symbolsContainer);
+        return legendContainer;
+      };
+      legend.addTo(map);
+    }
+
+
+      }
+
+
+
+
+
+</script>
+
+
+{% endblock %}

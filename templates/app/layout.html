@@ -1,0 +1,187 @@
+<!<!DOCTYPE html>
+<html>
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="height=device-height, initial-scale=1.0">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>{{ title }} - WaterWatch </title>
+
+  {% load static %}
+
+  <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href=" {% static 'app/mdb/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href=" {% static 'app/mdb/css/mdb.min.css' %}">
+
+  <link rel="stylesheet" href=" {% static 'app/mdb/css/style.css' %}">
+
+  <link rel="stylesheet" href=" {% static 'app/content/css/L.Control.Sidebar.css' %}">
+
+  <link rel="apple-touch-icon" href="apple-icon.png">
+  <link rel="shortcut icon" href="favicon.ico">
+
+  {% leaflet_css %}
+
+  <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,600,700,800', rel='stylesheet' type='text/css'>
+
+  <style>
+    .leaflet-container-default {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    .leaflet-control-layers-expanded {
+        background: black;
+        width: 150px;
+        opacity: 0.7;
+    }
+
+
+    .styled-input-single {
+        position:relative;
+        padding-left: 25px;
+        text-align: left;
+
+    }
+    .styled-input-single label {
+        cursor: pointer;
+    }
+
+    .styled-input-single label:before, .styled-input-single label:after {
+        content: '';
+        position: absolute;
+        top:50%
+        border-radius: 50%;
+    }
+    .styled-input-single label: before {
+        left:0;
+        width: 18px;
+        height: 18px;
+        margin: -13px 0 0;
+        background: #f7f7f7;
+        -webkit-box-shadow: 0 0 1px grey;
+                box-shadow: 0 0 1px grey;
+
+    }
+    .styled-input-single label: after {
+        left:3px;
+        width: 12px;
+        height: 12px;
+        margin: -10px 0 0;
+        opacity:0;
+        background: #37b2b2;
+        -webkit-transform: translate3d(-40px, 0, 0) scale(0.5);
+                transform: translate3d(-40px, 0, 0) scale(0.5);
+        -webkit-transition: opacity 0.25s ease-in-out, -webkit-transform 0.25s ease-in-out;
+        transition: opacity 0.25s ease-in-out, -webkit-transform 0.25s ease-in-out;
+        transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+        transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out, -webkit-transform 0.25s ease-in-out;
+
+      }
+
+
+      }
+      .styled-input-single input[type="radio"]:checked + label:after,
+      .styled-input-single input[type="checkbox"]:checked + label:after {
+        -webkit-transform: translate3d(0, 0, 0);
+                transform: translate3d(0, 0, 0);
+        opacity: 1;
+
+      }
+
+      .styled-input--square label:before, .styled-input--square label:after {
+        border-radius: 0;
+      }
+
+      .styled-input--rounded label:before {
+        border-radius: 10px;
+      }
+      .styled-input--rounded label:after {
+        border-radius: 6px;
+      }
+
+      .styled-input--diamond .styled-input-single  {
+        padding-left: 45px;
+      }
+
+      .styled-input--diamond label:before, .styled-input--diamond label:after {
+        border-radius: 0;
+      }
+      .styled-input--diamond label:before {
+        -webkit-transform: rotate(45deg);
+                transform: rotate(45deg);
+      }
+      .styled-input--diamond input[type="radio"]:checked + label:after,
+      .styled-input--diamond input[type="checkbox"]:checked + label:after {
+        -webkit-transform: rotate(45deg);
+                transform: rotate(45deg);
+        opacity: 1;
+      }
+
+
+  </style>
+
+</head>
+
+
+<body>
+  <div id="sidebar">
+    <div id="sidebar-heading" style="margin:5px;">
+            <h4 style="display:inline;">CAPACITY PLANNER</h4>
+    </div>
+    <br>
+      <div id="sidebar-body" style="margin:5px; color: whitesmoke;">
+        <h6><i class="fa fa-globe" aria-hidden="true"></i> Layers </h6><br>
+        <div class="styled-input-container styled-input--square">
+            <div class="styled-input-single">
+                <input type="checkbox" id="wind-chk" name="fieldset-1" onclick="showwinddata();"/><label for="wind-check">Average wind speed</label>
+            </div>
+            <div class="styled-input-single">
+                <input type="checkbox" id="lines-chk" name="fieldset-1" /><label for="lines-chk">Transmission lines</label>
+            </div>
+            <div class="styled-input-single">
+                <input type="checkbox" id="zones-chk" name="fieldset-1" /><label for="zones-chk">Electricity Prices</label>
+            </div>
+        </div>
+        <hr style="background:whitesmoke;">
+
+      </div>
+
+    </div>
+    <!-- sidebar end -->
+
+
+
+    {%block content%} {% endblock %}
+    <!-- scripts -->
+    <script src="{% static 'app/mdb/js/jquery-3.2.1.min.js' %}" ></script>
+    <script src="{% static 'app/mdb/js/popper.min.js' %}" ></script>
+    <script src="{% static 'app/mdb/js/bootstrap.min.js' %}" ></script>
+    <script src="{% static 'app/mdb/js/mdb.min.js' %}" ></script>
+    <!-- Initialisations -->
+    <script>
+
+
+    </script>
+    {% leaflet_js %}
+
+    <script src="{% static 'app/scripts/js/Chart.js' %}" ></script>
+
+    <script src="{% static 'app/scripts/js/leaflet.ajax.min.js' %}" ></script>
+
+    <script src="{% static 'app/scripts/js/L.Control.Sidebar.js' %}" ></script>
+
+    <script src="{% static 'app/scripts/js/leaflet-button.js' %}" ></script>
+
+    {%block scripts%} {% endblock %}
+
+</body>
+
+
+</html>
