@@ -23,21 +23,17 @@ admin.site.register(LinesMap, CapacityPlannerAdmin)
 admin.site.register(ZoneMap, CapacityPlannerAdmin)
 admin.site.register(WindMap, CapacityPlannerAdmin)
 
-df_NPV_reader = pd.read_csv('/Users/alexandrapopova/Downloads/NPV_Map_csv.csv')
-df_NPV_reader = df_NPV_reader.head(100)
-
+df_NPV_reader = pd.read_csv('/Users/alexandrapopova/Downloads/NPV_polygon_map.csv')
 df_lines_reader = pd.read_csv('/Users/alexandrapopova/Downloads/linesmap_simplified.csv')
 df_zones_reader = pd.read_csv('/Users/alexandrapopova/Downloads/zone_map.csv')
 df_wind_reader = pd.read_csv('/Users/alexandrapopova/Downloads/wind_map_2.csv')
 
+
 for index, row in df_NPV_reader.iterrows():
-    PolId= row['index']
-    zone = row['zone']
-    DailyEnergy= row['Daily Ener']
-    NPV=row['NPV, kEUR']
+    NPV=row['average_we']
     geom=row['WKT']
 
-    NPVMap(PolId=PolId, zone=zone, DailyEnergy=DailyEnergy, NPV=NPV, geom=geom).save()
+    NPVMap(NPV=NPV, geom=geom).save()
 
 for index, row in df_lines_reader.iterrows():
     LineId= row['line_id']
