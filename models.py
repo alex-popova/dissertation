@@ -4,9 +4,6 @@ from django.contrib.gis.geos import MultiPolygon
 
 # Create your models here.
 class NPVMap(models.Model):
-    PolId= models.CharField(max_length=1000)
-    zone= models.CharField(max_length=1000)
-    DailyEnergy=models.FloatField()
     NPV=models.FloatField()
     geom=models.MultiPolygonField()
 

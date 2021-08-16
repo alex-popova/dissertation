@@ -1,0 +1,404 @@
+{% extends "app/layout.html" %}
+
+{% load leaflet_tags %}
+{% load geojson_tags %}
+
+{% block content %}
+
+{% leaflet_map "main" callback="window.main_map_init" %}
+<style>
+
+  body {
+      padding: 0;
+      margin: 0;
+  }
+  html, body, #map {
+      height: 100%;
+      width: 100%;
+  }
+
+  #legendTitle {
+    text-align: left;
+    margin-bottom: 10px;
+    color: whitesmoke;
+    font-weight: bold;
+  }
+  .legend {
+    float: right;
+    background: rgba(0,0,0,0.8);
+    color: black;
+    display: inline-block;
+    padding: 6px 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    width: 200px;
+  }
+  .windlegend {
+    float: right;
+    background: rgba(0,0,0,0.8);
+    color: black;
+    display: inline-block;
+    padding: 6px 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    width: 200px;
+  }
+  .pricelegend {
+    float: right;
+    background: rgba(0,0,0,0.8);
+    color: black;
+    display: inline-block;
+    padding: 6px 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    width: 200px;
+  }
+  .symbolsContainer {
+    float: left;
+    margin-left: 10px;
+  }
+  .legendSquare {
+    border: 1px;
+    display: inline-block;
+  }
+  .legendValue {
+    position: absolute;
+    left: 50px;
+    color: whitesmoke;
+    font-size: 10pt;
+    text-align: left;
+  }
+  .info {
+    width:30vw;
+    height:48vh;
+    padding: 6px 10px;
+    font: 14px Arial, Helvetica, sans-serif;
+    background: rgba(0,0,0,0.5);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: whitesmoke;
+  }
+  .info h6 {
+    margin: 0 0 5px;
+    color: #777;
+    text-align: center;
+    color: whitesmoke;
+    font-weight: bold;
+  }
+  .info #horBarChart {
+    width: 100% !important;
+    max-width: 800px;
+  }
+  .leaflet-control-layers {
+    float:right;
+    top: 500px;
+    right:0;
+    position: absolute;
+    background: rdba(0,0,0,0.85);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+    color: whitesmoke;
+  }
+  .topleft.leaflet-control {
+    width: 150px;
+  }
+</style>
+
+<script type="text/javascript">
+
+
+  function main_map_init(map, options) {
+
+    var winddataset = new L.GeoJSON.AJAX("{% url 'wind_dataset' %}",
+    {
+      style : function (feature) {
+        return {
+          fillColor: feature.properties.colorcode,
+          weight: 0,
+          opacity: 0.2,
+          color: feature.properties.colorcode,
+          fillOpacity: 0.2
+      }}
+    })
+
+    const windchk=document.getElementById('wind-chk');
+
+    windchk.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        map.addLayer(winddataset);
+        windlegend.addTo(map);
+      } else {
+        map.removeLayer(winddataset);
+        windlegend.remove(map);
+      }
+      })
+
+
+
+
+    var dataset = new L.GeoJSON.AJAX("{% url 'NPV_dataset' %}",
+    {
+      style : function (feature) {
+        return {
+          fillColor: getColor(feature.properties.NPV),
+          weight: 2,
+          opacity: 0.4,
+          color: getColor(feature.properties.NPV),  //Outline color
+          fillOpacity: 0.4
+        }}
+    }).addTo(map);
+
+    function getColor(x) {
+      return ((x<-4000) ? '#d7191c' :
+              (x<-2000) ? '#fca75d' :
+              (x<0) ? '#fed088' :
+              (x<2000) ? '#b1e0a6' :
+              (x<4000) ? '#5ebd6b' : '#06992b');
+    };
+
+
+    var linesdataset = new L.GeoJSON.AJAX("{% url 'lines_dataset' %}",
+    {
+      style: {
+        color: '#000000',
+        weight: 1,
+        opacity: 1
+      }
+    })
+
+    const lineschk=document.getElementById('lines-chk');
+
+    lineschk.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        map.addLayer(linesdataset);
+      } else {
+        map.removeLayer(linesdataset);
+      }
+      })
+
+
+
+    var zonedataset = new L.GeoJSON.AJAX("{% url 'zone_dataset' %}",
+    {
+      style : function (feature) {
+        return {
+          fillColor: getPriceColor(feature.properties.price),
+          weight: 0,
+          opacity: 0.3,
+          color: getPriceColor(feature.properties.price),
+          fillOpacity: 0.3
+
+        }}
+    })
+    function getPriceColor(x) {
+      return ((x>=45) ? '#001f60' :
+              (x>=40) ? '#1d3b74' :
+              (x>=35) ? '#395587' :
+              (x>=30) ? '#59729d' :
+              (x>=25) ? '#768cb1' :
+              (x>=20) ? '#94a8c5' :
+              (x>=15) ? '#b4c4da' : '#ddebf7');
+    };
+    function getWindColor(x) {
+      return ((x>=11) ? '#b60000' :
+              (x>=10) ? '#ff3800' :
+              (x>=9) ? '#ff9400' :
+              (x>=8) ? '#f8f500' :
+              (x>=7) ? '#a4ff53' :
+              (x>=6) ? '#53ffa4' :
+              (x>=5) ? '#00e4f8' :
+              (x>=4) ? '#0080ff' :
+              (x>=3) ? '#0018ff' :  '#0000b6');
+    };
+
+    const zoneschk=document.getElementById('zones-chk');
+
+    zoneschk.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        map.addLayer(zonedataset);
+        pricelegend.addTo(map);
+      } else {
+        map.removeLayer(zonedataset);
+        pricelegend.remove(map);
+      }
+      })
+
+    const coordradio=document.getElementById('coords-radio');
+    var coordinput = document.getElementById("coordinate-input");
+
+
+    coordradio.addEventListener('change', (event) => {
+      if (event.currentTarget.checked) {
+        coordinput.style.display = "block";
+        bidzoneinput.style.display = "none";
+      } else {
+        coordinput.style.display = "none";
+        bidzoneinput.style.display = "block";
+      }
+      })
+
+    const bidzoneradio=document.getElementById('bidzone-radio');
+    var bidzoneinput = document.getElementById("bidzone-input");
+
+    bidzoneradio.addEventListener('change', (event) => {
+        if (event.currentTarget.checked) {
+          bidzoneinput.style.display = "block";
+          coordinput.style.display = "none";
+        } else {
+          bidzoneinput.style.display = "none";
+          coordinput.style.display = "block";
+          alert('unchecked!')
+        }
+        })
+
+
+    var menubutton = new L.Control.Button('Menu', {
+      toggleButton: 'active',
+      position: 'topleft',
+    });
+
+    menubutton.addTo(map);
+    menubutton.on('click', function() {
+      sidebar.toggle();
+    });
+
+
+
+    var optimisebutton = new L.Control.Button('Run optimisation', {
+      toggleButton: 'active',
+      position: 'topleft',
+
+    });
+    optimisebutton.addTo(map);
+    optimisebutton.on('click', function() {
+    });
+
+    var sidebar = L.control.sidebar('sidebar', {
+      closeButton: true,
+      position: 'left'
+
+
+    }).addTo(map);
+
+
+    createNPVLegend();
+
+
+      var windlegend = L.control({position: 'bottomright'});
+      windlegend.onAdd = function(map){
+        var legendContainer = L.DomUtil.create('div', 'legend');
+        var symbolsContainer = L.DomUtil.create('div', 'symbolsContainer');
+
+        var legendSquare;
+        var squareColor;
+
+        windclasses = [2, 3,4, 5,6,7,8,9,10,11];
+
+        $(legendContainer).append("<h6 id = 'legendTitle'>Average wind speed (m/s)</h6>");
+        for (var i = 0; i <= windclasses.length-1; i++) {
+
+
+          legendSquare= L.DomUtil.create("div", "legendSquare");
+          squareColor=getWindColor(windclasses[i]);
+          nextValue=windclasses[i]+1
+          $(legendSquare).attr("style","width: 10px; height: 10px; background: " + squareColor+"; margin: 3px");
+
+          $(legendSquare).append("<span class = 'legendValue'>" + windclasses[i] + ' &ndash; ' + nextValue + " </span>");
+          $(symbolsContainer).append(legendSquare);
+          $(symbolsContainer).append("<br>")
+        }
+
+
+        $(legendContainer).append(symbolsContainer);
+        return legendContainer;
+      };
+
+    function createNPVLegend() {
+      var legend = L.control({position: 'bottomright'});
+      legend.onAdd = function(map){
+        var legendContainer = L.DomUtil.create('div', 'legend');
+        var symbolsContainer = L.DomUtil.create('div', 'symbolsContainer');
+
+        var legendSquare;
+        var squareColor;
+
+        npvclasses = [-4001,-2001,-1,1999,3999,5999];
+
+        $(legendContainer).append("<h6 id = 'legendTitle'>Average NPV (kEUR)</h6>");
+        for (var i = 0; i <= npvclasses.length-1; i++) {
+
+          legendSquare= L.DomUtil.create("div", "legendSquare");
+          squareColor=getColor(npvclasses[i]);
+          currentValue=npvclasses[i]+1
+          prevValue=npvclasses[i]-1999
+          $(legendSquare).attr("style","width: 10px; height: 10px; background: " + squareColor+"; margin:3px");
+          if (npvclasses[i]==-4001) {
+            $(legendSquare).append("<span class = 'legendValue'> <" + currentValue + " </span> <br>");
+          }
+          else if (npvclasses[i]==5999) {
+            $(legendSquare).append("<span class = 'legendValue'> >4000 </span> <br>");
+          }
+          else {
+            $(legendSquare).append("<span class = 'legendValue'>" + prevValue + ' &ndash; ' + currentValue + " </span> <br>");
+          }
+
+          $(symbolsContainer).append(legendSquare);
+          $(symbolsContainer).append("<br>")
+        }
+
+
+        $(legendContainer).append(symbolsContainer);
+        return legendContainer;
+      };
+      legend.addTo(map);
+    }
+
+
+      var pricelegend = L.control({position: 'bottomright'});
+      pricelegend.onAdd = function(map){
+        var legendContainer = L.DomUtil.create('div', 'legend');
+        var symbolsContainer = L.DomUtil.create('div', 'symbolsContainer');
+
+        var legendSquare;
+        var squareColor;
+
+        priceclasses = [14, 19, 24, 29, 34,39,44,49];
+
+        $(legendContainer).append("<h6 id = 'legendTitle'>Electricity price (EUR/MWh)</h6>");
+        for (var i = 0; i <= priceclasses.length-1; i++) {
+
+          legendSquare= L.DomUtil.create("div", "legendSquare");
+          squareColor=getPriceColor(priceclasses[i]);
+          currentValue=priceclasses[i]+1
+          prevValue=priceclasses[i]-4
+          $(legendSquare).attr("style","width: 10px; height: 10px; background: " + squareColor+"; margin:3px");
+          if (priceclasses[i]==14) {
+            $(legendSquare).append("<span class = 'legendValue'> <" + currentValue + " </span> <br>");
+          }
+          else if (priceclasses[i]==49) {
+            $(legendSquare).append("<span class = 'legendValue'> >45 </span> <br>");
+          }
+          else {
+            $(legendSquare).append("<span class = 'legendValue'>" + prevValue + ' &ndash; ' + currentValue + " </span> <br>");
+          }
+
+          $(symbolsContainer).append(legendSquare);
+          $(symbolsContainer).append("<br>")
+        }
+
+
+        $(legendContainer).append(symbolsContainer);
+        return legendContainer;
+      };
+
+
+      }
+
+
+
+
+
+</script>
+
+
+{% endblock %}

@@ -135,14 +135,14 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '/Users/alexandrapopova/Desktop/Dissertation/CapacityPlanner/static'
 
 LEAFLET_CONFIG = {
-    'DEFAULT_CENTER': (60, 23),
-    'DEFAULT_ZOOM': 4,
+    'DEFAULT_CENTER': (52, 23),
+    'DEFAULT_ZOOM': 5,
     'MAX_ZOOM':20,
-    'MIN_ZOOM':3,
+    'MIN_ZOOM':4,
     'SCALE': 'both',
     'TILES': [('Open Street Map', 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {'attribution': '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', 'maxZoom':20}),
         ('Terrain Map', 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {'attribution': 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, Geoeye,Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'})]
-
+  
 }
 
 # Default primary key field type
